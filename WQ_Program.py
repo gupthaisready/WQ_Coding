@@ -286,3 +286,27 @@ f = open('Results.Out', 'w')
 pp_on_file = pprint.PrettyPrinter(indent=4, stream=f)
 pp_on_file.pprint(WQ_Data)
 f.close
+
+# Now that all the calculations are made and values are available, let us create the individual Respondent's Report.
+
+# For each respondent
+for val in WQ_Data.items():
+	if val[0] == 'Summary':
+		continue
+
+	filename = 'file'+str(val[0])+'.html'
+	f = open(filename, 'w')
+
+	message = '''<html><head></head>
+	<body><p><br><br><br><br><bold><center> Congratulations '''+WQ_Data[val[0]]['Name']+''' for taking the step towards knowing your Wellness Quotient Score.<br><br>
+	Your Wellness Quotient Score along with other findings are as follows:<br><br>
+	
+	Your Wellness Quotient Score is: '''+str(WQ_Data[val[0]]['Score'])+'''<br>
+	You are at the '''+str(WQ_Data[val[0]]['O_Perctl'])+''' percentile overall.<br>
+	You are at the '''+str(WQ_Data[val[0]]['AG_Perctl'])+''' percentile in your Age Group.<br>
+	Your BMI is '''+str(WQ_Data[val[0]]['BMI'])+'''.<br>
+	</center></bold></body></html>'''
+
+	f.write(message)
+	f.close()
+
