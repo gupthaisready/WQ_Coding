@@ -1,6 +1,7 @@
 from openpyxl import *
 import statistics
 from scipy import stats
+import imgkit
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -310,3 +311,7 @@ for val in WQ_Data.items():
 	f.write(message)
 	f.close()
 
+	# Converting the HTML to JPEG
+	jpegfilename = 'file'+str(val[0])+'.jpg'
+	config = imgkit.config(wkhtmltoimage='C:\Program Files\wkhtmltopdf\\bin\wkhtmltoimage.exe')
+	imgkit.from_file(filename, jpegfilename, config=config)
