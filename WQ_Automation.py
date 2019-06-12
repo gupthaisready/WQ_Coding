@@ -313,5 +313,5 @@ for val in WQ_Data.items():
 
 	# Converting the HTML to JPEG
 	jpegfilename = 'file'+str(val[0])+'.jpg'
-	config = imgkit.config(wkhtmltoimage='C:\Program Files\wkhtmltopdf\\bin\wkhtmltoimage.exe')
+	config = imgkit.config(wkhtmltoimage='/usr/local/bin/wkhtmltoimage')
 	imgkit.from_file(filename, jpegfilename, config=config)
