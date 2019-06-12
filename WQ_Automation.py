@@ -3,6 +3,8 @@ import statistics
 from scipy import stats
 import imgkit
 import sys
+import math
+
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -260,6 +262,12 @@ TempGroups = {'Cat1_0_18': {'TempScoreList': [],
 				 }
 
 
+f = open('Results.Out', 'w')
+pp_on_file = pprint.PrettyPrinter(indent=4, stream=f)
+pp_on_file.pprint(WQ_Data)
+f.close
+
+
 # For each respondent
 for val in WQ_Data.items():
 	if val[0] == 'Summary':
@@ -314,6 +322,9 @@ f.close
 
 # Now that all the calculations are made and values are available, let us create the individual Respondent's Report.
 
+# Anon function to arrive at the ordinal number notation. For e.g., 1st, 2nd, 3rd, etc...
+ordinal = lambda n: "%d%s" % (n,"tsnrhtdd"[(math.floor(n/10)%10!=1)*(n%10<4)*n%10::4])
+
 # For each respondent
 for val in WQ_Data.items():
 	if val[0] == 'Summary':
@@ -322,15 +333,41 @@ for val in WQ_Data.items():
 	filename = './Results/file'+str(val[0])+'.html'
 	f = open(filename, 'w')
 
-	message = '''<html><head></head>
-	<body><p><br><br><br><br><bold><center> Congratulations '''+str(WQ_Data[val[0]]['Name'])+''' for taking the step towards knowing your Wellness Quotient Score.<br><br>
-	Your Wellness Quotient Score along with other findings are as follows:<br><br>
-	
-	Your Wellness Quotient Score is: '''+str(WQ_Data[val[0]]['Score'])+'''<br>
-	You are at the '''+str(WQ_Data[val[0]]['O_Perctl'])+''' percentile overall.<br>
-	You are at the '''+str(WQ_Data[val[0]]['AG_Perctl'])+''' percentile in your Age Group.<br>
-	Your BMI is '''+str(WQ_Data[val[0]]['BMI'])+'''.<br>
-	</center></bold></body></html>'''
+	# WQ Range
+	healthRange = 'NEEDS ATTENTION'
+	if round(WQ_Data[val[0]]['Score']) > 85:
+		healthRange = 'HEALTHY'
+	elif round(WQ_Data[val[0]]['Score']) > 70:
+		healthRange = 'NEEDS PREVENTION'
+
+	# Creating the HTML content
+	message = '''<html><head><title>Report</title></head>
+	<body style="background-color:white;">
+	<br><br>
+	<center><h1 style="color:black;" style="font-family:verdana;">Wellness Quotient Report for '''+\
+	str(WQ_Data[val[0]]['Name']).title()+'''</h1></center>
+	<br><br><br>
+	<table align="center" cellspacing="0" cellpadding="0">
+		<tr><th style="background-color:lightblue" rowspan="2" height="80" width="300"><b>
+		<font size="5">Your Wellness Quotient is</font></th><td width="300" align="center">
+		<b><font size="4">Your WQ places you in the "'''+healthRange+'''" range</font></td></tr>
+		<tr><td width="300" align="center"></td></tr>
+		<tr><th style="background-color:lightblue" rowspan="2" height="80" width="300"><b><b><font size="8">'''+\
+		str(round(WQ_Data[val[0]]['Score']))+'''</font></th><td width="700" align="center"><b><font size="4">Your WQ is at the '''+\
+		ordinal(round(WQ_Data[val[0]]['AG_Perctl']))+''' Percentile among people of your age group</font></td></tr>
+		<tr><td width="300" align="center"></td>	</tr>
+	</table>
+	<br><br><br><br><br><br><br><br><br><br><br><br>
+	<p id="date"></p>
+	<p><font size="4">Report valid for 6 months</font></p> 
+	<script>
+	n =  new Date();
+    y = n.getFullYear();
+    m = n.getMonth() + 1;
+    d = n.getDate();
+    document.getElementById("date").innerHTML = ("Report Generated on " + d + "/" + m + "/" + y).fontsize("4");
+	</script>    
+	</body>	</html>'''
 
 	f.write(message)
 	f.close()
