@@ -2,9 +2,15 @@ from openpyxl import *
 import statistics
 from scipy import stats
 import imgkit
+import sys
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
+
+# Build Data Structure
+# Parse Wellness_Quotient.xlsx & fill the Data Stucture with Personal Info of Respondent.
+# Parse QuizResponses.xlsx & calculate WQ Score & fill remaining calculated-data in the Data Structure.
+# Create Output files.
 
 # The Uber Data Structure WQ_Data. Empty Summary is created now.
 # Individual Respondent's Data Structure is created later
@@ -191,7 +197,8 @@ WQ_responses = load_workbook('QuizResponses.xlsx')
 WQ_response_sheet = WQ_responses.active
 
 # This is to apply restriction on Points for certain Questions. In order to avoid skewing the WQ score.
-col_list_having_maxvalues = {"CO": 10, "EB": 20} # Q25, Q30
+#col_list_having_maxvalues = {"CO": 10, "EB": 20} # Q25, Q30
+col_list_having_maxvalues = {"CO": 10} # Q25 only
 
 # Calculate individual WQ Score by applying formula
 for WQ_response_row in WQ_response_sheet.iter_rows(3,WQ_response_sheet.max_row):
@@ -206,7 +213,8 @@ for WQ_response_row in WQ_response_sheet.iter_rows(3,WQ_response_sheet.max_row):
 	WQ_Data[WQ_response_row[0].value]["Score"] = 100 - (WQ_Data[WQ_response_row[0].value]["Temp_Tot"] / 327 * 100)
 
 
-#Now that the WQ Scores are ready for all, and other data is captured for each respondent, it is time to arrive at complex calculations
+#Now that the WQ Scores are ready for all, and other data is captured for each respondent,
+# it is time to arrive at complex calculations
 
 # Temp Data Structure for Age Group Calculations & Overall Calculations
 TempGroups = {'Cat1_0_18': {'TempScoreList': [],
@@ -251,18 +259,20 @@ TempGroups = {'Cat1_0_18': {'TempScoreList': [],
 								 }
 				 }
 
+
 # For each respondent
 for val in WQ_Data.items():
 	if val[0] == 'Summary':
 		continue
 
 	TempGroups["Overall"]["TempScoreList"].append(val[1]["Score"])
-	TempGroups[val[1]["AgeCat"]]["TempScoreList"].append(val[1]["Score"])
 	TempGroups["Overall"]["BMITot"] += val[1]["BMI"]
-	TempGroups[val[1]["AgeCat"]]["BMITot"] += val[1]["BMI"]
 	TempGroups["Overall"]["FormTimeTot"] += val[1]["RespTime"].total_seconds()
-	TempGroups[val[1]["AgeCat"]]["FormTimeTot"] += val[1]["RespTime"].total_seconds()
 	TempGroups["Overall"]["WQTot"] += val[1]["Score"]
+
+	TempGroups[val[1]["AgeCat"]]["TempScoreList"].append(val[1]["Score"])
+	TempGroups[val[1]["AgeCat"]]["BMITot"] += val[1]["BMI"]
+	TempGroups[val[1]["AgeCat"]]["FormTimeTot"] += val[1]["RespTime"].total_seconds()
 	TempGroups[val[1]["AgeCat"]]["WQTot"] += val[1]["Score"]
 
 
@@ -283,6 +293,20 @@ for ageG in TempGroups.items():
 	WQ_Data["Summary"][ageG[0]]["Avg_Form_Time"] = ageG[1]["FormTimeTot"] / WQ_Data["Summary"][ageG[0]]["N_Respondents"]
 	WQ_Data["Summary"][ageG[0]]["Avg_WQ_Score"] = ageG[1]["WQTot"] / WQ_Data["Summary"][ageG[0]]["N_Respondents"]
 
+# Temp output for Iniyan
+f = open('8thJuneResults.txt', 'w')
+for val in WQ_Data.items():
+	if val[0] == 'Summary':
+		continue
+	f.write("Name is: "+str(WQ_Data[val[0]]['Name'])+
+			", WQ Score is: "+str(WQ_Data[val[0]]['Score'])+
+			", At Overall Percentile: "+str(WQ_Data[val[0]]['O_Perctl'])+
+			", At Percentile '"+str(WQ_Data[val[0]]['AG_Perctl'])+"' in your Age Category '"+str(WQ_Data[val[0]]['AgeCat'])+
+			"', BMI: " + str(WQ_Data[val[0]]['BMI']) +
+			"\n\n")
+f.close
+
+
 f = open('Results.Out', 'w')
 pp_on_file = pprint.PrettyPrinter(indent=4, stream=f)
 pp_on_file.pprint(WQ_Data)
@@ -295,11 +319,11 @@ for val in WQ_Data.items():
 	if val[0] == 'Summary':
 		continue
 
-	filename = 'file'+str(val[0])+'.html'
+	filename = './Results/file'+str(val[0])+'.html'
 	f = open(filename, 'w')
 
 	message = '''<html><head></head>
-	<body><p><br><br><br><br><bold><center> Congratulations '''+WQ_Data[val[0]]['Name']+''' for taking the step towards knowing your Wellness Quotient Score.<br><br>
+	<body><p><br><br><br><br><bold><center> Congratulations '''+str(WQ_Data[val[0]]['Name'])+''' for taking the step towards knowing your Wellness Quotient Score.<br><br>
 	Your Wellness Quotient Score along with other findings are as follows:<br><br>
 	
 	Your Wellness Quotient Score is: '''+str(WQ_Data[val[0]]['Score'])+'''<br>
@@ -312,6 +336,10 @@ for val in WQ_Data.items():
 	f.close()
 
 	# Converting the HTML to JPEG
-	jpegfilename = 'file'+str(val[0])+'.jpg'
-	config = imgkit.config(wkhtmltoimage='/usr/local/bin/wkhtmltoimage')
+	jpegfilename = './Results/file'+str(val[0])+'.jpg'
+	if sys.platform == 'win32':
+		config = imgkit.config(wkhtmltoimage='C:\Program Files\wkhtmltopdf\\bin\wkhtmltoimage.exe')
+	else:
+		config = imgkit.config(wkhtmltoimage='/usr/local/bin/wkhtmltoimage')
+
 	imgkit.from_file(filename, jpegfilename, config=config)
