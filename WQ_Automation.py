@@ -335,37 +335,74 @@ for val in WQ_Data.items():
 
 	# WQ Range
 	healthRange = 'NEEDS ATTENTION'
+	healthColor = '#FF0000'
 	if round(WQ_Data[val[0]]['Score']) > 85:
 		healthRange = 'HEALTHY'
+		healthColor = '#006400'
 	elif round(WQ_Data[val[0]]['Score']) > 70:
 		healthRange = 'NEEDS PREVENTION'
+		healthColor = '#e8a310'
 
 	# Creating the HTML content
-	message = '''<html><head><title>Report</title></head>
-	<body style="background-color:white;">
-	<br><br>
-	<center><h1 style="color:black;" style="font-family:verdana;">Wellness Quotient Report for '''+\
-	str(WQ_Data[val[0]]['Name']).title()+'''</h1></center>
-	<br><br><br>
+	message = '''<html><head><title>Wellness Quotient</title></head>
+	<body>
+	<br>
 	<table align="center" cellspacing="0" cellpadding="0">
-		<tr><th style="background-color:lightblue" rowspan="2" height="80" width="300"><b>
-		<font size="5">Your Wellness Quotient is</font></th><td width="300" align="center">
-		<b><font size="4">Your WQ places you in the "'''+healthRange+'''" range</font></td></tr>
-		<tr><td width="300" align="center"></td></tr>
-		<tr><th style="background-color:lightblue" rowspan="2" height="80" width="300"><b><b><font size="8">'''+\
-		str(round(WQ_Data[val[0]]['Score']))+'''</font></th><td width="700" align="center"><b><font size="4">Your WQ is at the '''+\
-		ordinal(round(WQ_Data[val[0]]['AG_Perctl']))+''' Percentile among people of your age group</font></td></tr>
-		<tr><td width="300" align="center"></td>	</tr>
+		<td width="310"><img src="logo.png"></td>
+		<td width="700"><h1 style="color:black;" style="font-family:verdana;">Wellness Quotient Report for '''+\
+	str(WQ_Data[val[0]]['Name']).title()+'''</h1></td>
 	</table>
-	<br><br><br><br><br><br><br><br><br><br><br><br>
-	<p id="date"></p>
-	<p><font size="4">Report valid for 6 months</font></p> 
+	<br>
+	<style>
+	a{
+	text-decoration : none;
+	color : '''+healthColor+''';
+	}
+	</style>
+	<style>
+	* {box-sizing: border-box}
+
+	.container {
+	width: 90%;
+	background-color: #C0C0C0;
+	}
+
+	.skills {
+	text-align: right;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	color: white;
+	}
+
+	.wqrange {width: '''+str(round(WQ_Data[val[0]]['Score']))+'''%; background-color: '''+healthColor+''';}
+	.agerange {width: '''+str(round(WQ_Data[val[0]]['AG_Perctl']))+'''%; background-color: #2196F3;}
+	</style>
+	<table align="center" cellspacing="0" cellpadding="5">
+		<tr><th align="center" background="table_background.PNG" style="background-repeat:no-repeat;" rowspan="2" height="100" width="355"><b>
+			<font size="5">Your Wellness Quotient is</font></th>
+				<td width="250" align="center"><b><font size="4">Your WQ places you in the <a>"'''+healthRange+'''"</a> range</font></td></tr>
+			
+		<tr><td width="300"><div class="container">
+			<div class="skills wqrange"><b>'''+str(round(WQ_Data[val[0]]['Score']))+'''</b></div></td></tr>
+		
+		<tr><th align="center" background="table_background1.PNG" style="background-repeat:no-repeat;" rowspan="2" height="108" width="150"><b><b><font size="9">'''+\
+			str(round(WQ_Data[val[0]]['Score']))+'''</font></th>
+				<td width="700" align="center"><b><font size="4">Your WQ is at the '''+\
+				ordinal(round(WQ_Data[val[0]]['AG_Perctl']))+''' Percentile among people of your age group</font></td></tr>
+		
+		<tr><td width="300"><div class="container">
+			<div class="skills agerange"><b>'''+str(round(WQ_Data[val[0]]['AG_Perctl']))+'''</b></div></td></tr>
+			<td width="300"><br><br><br><b><p id="date"></p></b></td>
+		<tr></tr>
+			<td width="300"><p><font size="3"><b>Report valid for 6 months</b></font></p></td>
+	</table>
+	<br><br><br>	 
 	<script>
-	n =  new Date();
-    y = n.getFullYear();
-    m = n.getMonth() + 1;
-    d = n.getDate();
-    document.getElementById("date").innerHTML = ("Report Generated on " + d + "/" + m + "/" + y).fontsize("4");
+		n =  new Date();
+    	y = n.getFullYear();
+    	m = n.getMonth() + 1;
+    	d = n.getDate();
+    	document.getElementById("date").innerHTML = ("Report Generated on " + d + "/" + m + "/" + y).fontsize("3");
 	</script>    
 	</body>	</html>'''
 
