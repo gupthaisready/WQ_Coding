@@ -262,12 +262,6 @@ TempGroups = {'Cat1_0_18': {'TempScoreList': [],
 				 }
 
 
-f = open('Results.Out', 'w')
-pp_on_file = pprint.PrettyPrinter(indent=4, stream=f)
-pp_on_file.pprint(WQ_Data)
-f.close
-
-
 # For each respondent
 for val in WQ_Data.items():
 	if val[0] == 'Summary':
