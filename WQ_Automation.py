@@ -4,6 +4,7 @@ from scipy import stats
 import imgkit
 import sys
 import math
+import os
 
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
@@ -99,7 +100,7 @@ WQ_QR_sheet = WQ_QR.active
 Resp_ID = 0
 
 # Fill the Uber Data Structure WQ_Data with individual Respondent's Data
-for WQ_QR_row in WQ_QR_sheet.iter_rows(1, WQ_QR_sheet.max_row,1,30): # Fetching up to Weight & Height
+for WQ_QR_row in WQ_QR_sheet.iter_rows(1, WQ_QR_sheet.max_row,1,159): # Fetching all columns
 	for WQ_QR_row_cell in WQ_QR_row:
 		# Handle 1st row appropriately
 		if WQ_QR_row_cell.row == 1:
@@ -129,7 +130,8 @@ for WQ_QR_row in WQ_QR_sheet.iter_rows(1, WQ_QR_sheet.max_row,1,30): # Fetching 
                                        "Temp_Tot":0,
                                        "Score"  : 0,
                                        "O_Perctl":0,
-                                       "AG_Perctl":0
+                                       "AG_Perctl":0,
+                                       "AuthCode": ""
 									   }
 							 }
 				# Increase number of overall Respondents in Summary
@@ -192,6 +194,9 @@ for WQ_QR_row in WQ_QR_sheet.iter_rows(1, WQ_QR_sheet.max_row,1,30): # Fetching 
 				elif WQ_QR_sheet.cell(1, WQ_QR_row_cell.column).value == 'Your Weight (in Kg)':
 					WQ_Data[Resp_ID]["WeightKg"] = WQ_QR_row_cell.value
 					WQ_Data[Resp_ID]["BMI"] = float(WQ_Data[Resp_ID]["WeightKg"]) / (float(WQ_Data[Resp_ID]["HeightCm"])*0.01)**2
+				elif WQ_QR_sheet.cell(1, WQ_QR_row_cell.column).value == 'Enter your Authentication Code. Your Wellness Quotient Score will be sent to you only if there is a valid Authentication Code.':
+					WQ_Data[Resp_ID]["AuthCode"] = WQ_QR_row_cell.value
+
 
 
 # Calculate the WQ Score from the QuizResponses Excel book
@@ -295,20 +300,6 @@ for ageG in TempGroups.items():
 	WQ_Data["Summary"][ageG[0]]["Avg_Form_Time"] = ageG[1]["FormTimeTot"] / WQ_Data["Summary"][ageG[0]]["N_Respondents"]
 	WQ_Data["Summary"][ageG[0]]["Avg_WQ_Score"] = ageG[1]["WQTot"] / WQ_Data["Summary"][ageG[0]]["N_Respondents"]
 
-# Temp output for Iniyan
-f = open('8thJuneResults.txt', 'w')
-for val in WQ_Data.items():
-	if val[0] == 'Summary':
-		continue
-	f.write("Name is: "+str(WQ_Data[val[0]]['Name'])+
-			", WQ Score is: "+str(WQ_Data[val[0]]['Score'])+
-			", At Overall Percentile: "+str(WQ_Data[val[0]]['O_Perctl'])+
-			", At Percentile '"+str(WQ_Data[val[0]]['AG_Perctl'])+"' in your Age Category '"+str(WQ_Data[val[0]]['AgeCat'])+
-			"', BMI: " + str(WQ_Data[val[0]]['BMI']) +
-			"\n\n")
-f.close
-
-
 f = open('Results.Out', 'w')
 pp_on_file = pprint.PrettyPrinter(indent=4, stream=f)
 pp_on_file.pprint(WQ_Data)
@@ -324,7 +315,14 @@ for val in WQ_Data.items():
 	if val[0] == 'Summary':
 		continue
 
-	filename = './Results/file'+str(val[0])+'.html'
+	dirName = "./Results/"+str(WQ_Data[val[0]]['AuthCode'])
+	try:
+		os.makedirs(dirName)
+		print("Directory ", dirName, " Created ")
+	except FileExistsError:
+		print("Directory ", dirName, " already exists")
+
+	filename = dirName+'/file'+str(val[0])+'.html'
 	f = open(filename, 'w')
 
 	# WQ Range
@@ -342,7 +340,7 @@ for val in WQ_Data.items():
 	<body>
 	<br>
 	<table align="center" cellspacing="0" cellpadding="0">
-		<td width="310"><img src="logo.png"></td>
+		<td width="310"><img src="../../logo.png"></td>
 		<td width="700"><h1 style="color:black;" style="font-family:verdana;">Wellness Quotient Report for '''+\
 	str(WQ_Data[val[0]]['Name']).title()+'''</h1></td>
 	</table>
@@ -372,14 +370,14 @@ for val in WQ_Data.items():
 	.agerange {width: '''+str(round(WQ_Data[val[0]]['AG_Perctl']))+'''%; background-color: #2196F3;}
 	</style>
 	<table align="center" cellspacing="0" cellpadding="5">
-		<tr><th align="center" background="table_background.PNG" style="background-repeat:no-repeat;" rowspan="2" height="100" width="355"><b>
+		<tr><th align="center" background="../../table_background.PNG" style="background-repeat:no-repeat;" rowspan="2" height="100" width="355"><b>
 			<font size="5">Your Wellness Quotient is</font></th>
 				<td width="250" align="center"><b><font size="4">Your WQ places you in the <a>"'''+healthRange+'''"</a> range</font></td></tr>
 			
 		<tr><td width="300"><div class="container">
 			<div class="skills wqrange"><b>'''+str(round(WQ_Data[val[0]]['Score']))+'''</b></div></td></tr>
 		
-		<tr><th align="center" background="table_background1.PNG" style="background-repeat:no-repeat;" rowspan="2" height="108" width="150"><b><b><font size="9">'''+\
+		<tr><th align="center" background="../../table_background1.PNG" style="background-repeat:no-repeat;" rowspan="2" height="108" width="150"><b><b><font size="9">'''+\
 			str(round(WQ_Data[val[0]]['Score']))+'''</font></th>
 				<td width="700" align="center"><b><font size="4">Your WQ is at the '''+\
 				ordinal(round(WQ_Data[val[0]]['AG_Perctl']))+''' Percentile among people of your age group</font></td></tr>
@@ -404,7 +402,7 @@ for val in WQ_Data.items():
 	f.close()
 
 	# Converting the HTML to JPEG
-	jpegfilename = './Results/file'+str(val[0])+'.jpg'
+	jpegfilename = dirName+'/file'+str(val[0])+'.jpg'
 	if sys.platform == 'win32':
 		config = imgkit.config(wkhtmltoimage='C:\Program Files\wkhtmltopdf\\bin\wkhtmltoimage.exe')
 	else:
